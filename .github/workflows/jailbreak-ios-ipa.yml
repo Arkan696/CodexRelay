@@ -1,0 +1,105 @@
+name: Build Jailbreak IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios-ipa:
+    name: Build unsigned IPA for jailbroken devices
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck mobile app
+        run: pnpm --filter @codex-relay/mobile typecheck
+
+      - name: Build embedded WebView bundles
+        run: |
+          pnpm --filter @codex-relay/mobile build:workspace-code-editor
+          pnpm --filter @codex-relay/mobile build:workspace-ssh-terminal
+
+      - name: Generate native iOS project
+        working-directory: apps/mobile
+        env:
+          CI: 1
+          EXPO_NO_TELEMETRY: 1
+        run: pnpm exec expo prebuild --platform ios --clean --non-interactive
+
+      - name: Install CocoaPods
+        working-directory: apps/mobile/ios
+        run: pod install --repo-update
+
+      - name: Detect Xcode workspace and scheme
+        id: xcode
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          if [ -z "$WORKSPACE" ]; then
+            echo "No .xcworkspace found" >&2
+            exit 1
+          fi
+          SCHEME="$(xcodebuild -list -json -workspace "$WORKSPACE" | ruby -e 'require "json"; data = JSON.parse(STDIN.read); puts data.fetch("workspace").fetch("schemes").first')"
+          if [ -z "$SCHEME" ]; then
+            echo "No Xcode scheme found" >&2
+            exit 1
+          fi
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned device app
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "${{ steps.xcode.outputs.workspace }}" \
+            -scheme "${{ steps.xcode.outputs.scheme }}" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-derived-data \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build
+
+      - name: Package IPA
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find build/ios-derived-data/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found" >&2
+            exit 1
+          fi
+          rm -rf Payload ipa
+          mkdir -p Payload ipa
+          cp -R "$APP_PATH" Payload/
+          /usr/bin/codesign --force --sign - --timestamp=none --deep "Payload/$(basename "$APP_PATH")" || true
+          /usr/bin/zip -qry "ipa/CodexRelay-jailbreak-unsigned.ipa" Payload
+          ls -lh ipa/*.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodexRelay-jailbreak-unsigned-ipa
+          path: apps/mobile/ipa/*.ipa
+          if-no-files-found: error
