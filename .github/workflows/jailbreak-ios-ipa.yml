@@ -43,7 +43,7 @@ jobs:
         env:
           CI: 1
           EXPO_NO_TELEMETRY: 1
-        run: pnpm exec expo prebuild --platform ios --clean --non-interactive
+        run: pnpm exec expo prebuild --platform ios --clean
 
       - name: Install CocoaPods
         working-directory: apps/mobile/ios
