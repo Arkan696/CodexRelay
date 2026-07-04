@@ -9,7 +9,7 @@ on:
 jobs:
   build-ios-ipa:
     name: Build unsigned IPA for jailbroken devices
-    runs-on: macos-15
+    runs-on: macos-latest
     timeout-minutes: 90
 
     steps:
