@@ -38,6 +38,13 @@ jobs:
           pnpm --filter @codex-relay/mobile build:workspace-code-editor
           pnpm --filter @codex-relay/mobile build:workspace-ssh-terminal
 
+      - name: Generate Hot Updater signing keys
+        working-directory: apps/mobile
+        run: |
+          mkdir -p keys
+          openssl genrsa -out keys/private-key.pem 2048
+          openssl rsa -in keys/private-key.pem -pubout -out keys/public-key.pem
+
       - name: Generate native iOS project
         working-directory: apps/mobile
         env:
