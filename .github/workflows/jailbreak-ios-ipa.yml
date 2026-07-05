@@ -43,7 +43,17 @@ jobs:
         env:
           CI: 1
           EXPO_NO_TELEMETRY: 1
-        run: pnpm exec expo prebuild --platform ios --clean
+        run: |
+          set -o pipefail
+          pnpm exec expo prebuild --platform ios --clean 2>&1 | tee prebuild-ios.log
+
+      - name: Upload prebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuild-ios-log
+          path: apps/mobile/prebuild-ios.log
+          if-no-files-found: ignore
 
       - name: Install CocoaPods
         working-directory: apps/mobile/ios
