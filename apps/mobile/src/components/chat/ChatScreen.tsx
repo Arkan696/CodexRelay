@@ -2705,14 +2705,14 @@ function errorMessage(error: unknown) {
 function scannerPairingFailureMessage(error: unknown) {
   return isPairingQrPayloadError(error)
     ? "This is not the Codex Relay QR. Scan the QR shown on your computer."
-    : "Could not connect. Use the same Wi-Fi or turn on Tailscale, then scan again.";
+    : "Could not connect. Use Wi-Fi/LAN, Tailscale, or a public tunnel URL, then scan again.";
 }
 
 const invalidPairingQrAlertMessage =
   "Run npx codex-relay@latest on your computer, then scan the QR shown there.";
 
 const pairingFailureAlertMessage =
-  "Use the same Wi-Fi on your phone and computer. If that is not possible, turn on Tailscale on both devices and scan again.";
+  "Make sure your phone can reach the Mobile URL printed by the relay. If the devices are on different networks, use Tailscale or start codex-relay with --public-url <https-url>.";
 
 async function safeAsyncValue<T>(callback: () => Promise<T>) {
   try {

@@ -8,7 +8,7 @@ Codex Relay is an independent project. It is not affiliated with, endorsed by, o
 
 - Node.js 22.14 or newer
 - Codex CLI installed and signed in on the computer running the relay
-- The Codex Relay mobile app on the same network, Tailscale network, or another route that can reach your computer
+- The Codex Relay mobile app on the same network, Tailscale network, public tunnel, or another route that can reach your computer
 
 ## Start the Relay
 
@@ -98,6 +98,8 @@ The relay listens on `0.0.0.0:8787` by default. Configure it with environment va
 | `CODEX_RELAY_WORKSPACE_PATH`           | Workspace path Codex should use. Defaults to the directory where you run `npx codex-relay@latest`. |
 | `CODEX_RELAY_AUTH_DB_PATH`             | Pairing and session database path. Defaults to `.codex-relay/auth.db`.                             |
 | `CODEX_RELAY_APPROVAL_SECRET`          | Secret used by the local approve command. Usually generated automatically.                         |
+| `CODEX_RELAY_PUBLIC_URL`               | Public or tunnel URL to prefer in the mobile pairing QR.                                           |
+| `CODEX_RELAY_PUBLIC_URLS`              | Comma- or whitespace-separated public/tunnel URLs to include as QR candidates.                     |
 | `CODEX_RELAY_DANGEROUSLY_AUTO_APPROVE` | Set to `1` to auto-approve mobile pairing requests. Prefer the CLI flag for local use.             |
 | `CODEX_HOME`                           | Codex home directory, used when reading Codex session metadata.                                    |
 | `CODEX_BIN`                            | Codex CLI executable path.                                                                         |
@@ -118,6 +120,7 @@ The phone must be able to reach one of the URLs printed by the relay.
 
 - On the same Wi-Fi network, the relay usually prints a local network address.
 - On Tailscale, the relay prefers your Tailscale address when it can detect one.
+- For a public HTTPS tunnel, start with `npx codex-relay@latest --public-url https://your-tunnel.example.com`.
 - If several Wi-Fi, VPN, or virtual network addresses are available, the QR includes all detected candidates and the app tries them automatically.
 
 ## Troubleshooting
@@ -146,5 +149,6 @@ Connection checklist:
 
 - Are the phone and computer on the same Wi-Fi or LAN?
 - If keeping the same network is difficult, are both devices connected through Tailscale or another reachable private network?
+- If using a public tunnel, did you start the relay with `--public-url <https-url>` and scan the newly printed QR?
 - Can the phone open the exact `Mobile:` URL printed by the relay?
 - Does the computer firewall allow inbound traffic on the relay port, usually `8787`?

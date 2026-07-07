@@ -115,7 +115,11 @@ serve(
   },
   (info) => {
     const listenUrl = `http://${info.address}:${info.port}`;
-    const connectUrlCandidates = getConnectUrlCandidates({ listenUrl, port: info.port });
+    const connectUrlCandidates = getConnectUrlCandidates({
+      listenUrl,
+      port: info.port,
+      publicUrls: configuredPublicUrls(),
+    });
     const connectUrl = connectUrlCandidates[0]?.url ?? listenUrl;
     const connectUrls = connectUrlCandidates.map((candidate) => candidate.url);
     const pairingPayload = createPairingQrPayload({
@@ -178,6 +182,7 @@ function formatStartupInstructions(details: {
     `${color.prompt("›")} Commands`,
     `  ${color.command(npxCommand)}              Start and print a pairing QR`,
     `  ${color.command(`${npxCommand} --bg`)}         Start in the background`,
+    `  ${color.command(`${npxCommand} --public-url <url>`)} Use a public/tunnel URL`,
     `  ${color.command(`${npxCommand} qr`)}           Print this QR again`,
     `  ${color.command(`${npxCommand} approve <code>`)} Approve a device`,
     "",
@@ -221,6 +226,21 @@ function formatClientCount(tokenCount: number) {
 
 function hashClientToken(token: string) {
   return createHash("sha256").update(token).digest("base64url");
+}
+
+function configuredPublicUrls() {
+  return [
+    process.env.CODEX_RELAY_PUBLIC_URL,
+    process.env.CODEX_RELAY_PUBLIC_URLS,
+    process.env.CODEX_RELAY_ADDITIONAL_SERVER_URLS,
+  ].flatMap((value) => splitConfiguredUrls(value));
+}
+
+function splitConfiguredUrls(value: string | undefined) {
+  return (value ?? "")
+    .split(/[\s,]+/)
+    .map((url) => url.trim())
+    .filter(Boolean);
 }
 
 async function getApprovalSecret() {

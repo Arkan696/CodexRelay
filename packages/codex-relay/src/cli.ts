@@ -37,6 +37,7 @@ const program = new Command()
   .description("Run and approve the codex-relay local CLI bridge.")
   .option("--bg", "run the Codex Relay server in the background")
   .option("--debug", "write verbose relay diagnostics to debug.log")
+  .option("--public-url <url>", "prefer a public or tunnel URL in the mobile pairing QR")
   .option(
     "--dangerously-auto-approve",
     "automatically approve mobile pairing requests without a local approval command",
@@ -48,6 +49,8 @@ const program = new Command()
 Examples:
   ${npxCommand}              Start the relay and print a pairing QR
   ${npxCommand} --bg         Start the relay in the background
+  ${npxCommand} --public-url https://relay.example.com
+                              Start with a public or tunnel URL
   ${npxCommand} qr           Print the current pairing QR
   ${npxCommand} clear        Sign out every paired mobile app
   ${npxCommand} approve CODE Approve a pending mobile pairing request`,
@@ -58,6 +61,9 @@ Examples:
     }
     if (options.dangerouslyAutoApprove) {
       process.env.CODEX_RELAY_DANGEROUSLY_AUTO_APPROVE = "1";
+    }
+    if (options.publicUrl) {
+      process.env.CODEX_RELAY_PUBLIC_URL = options.publicUrl;
     }
 
     if (options.bg) {

@@ -547,7 +547,7 @@ function parsePairingServerUrlsParam(value: string | null) {
 function pairingCandidateFailureMessage(errors: PairingCandidateConnectionError[]) {
   const attemptedUrls = errors.map((error) => error.serverUrl).join(", ");
   return attemptedUrls
-    ? `Could not reach any server URL from the pairing QR. Tried: ${attemptedUrls}. Make sure this device is on the same network or Tailscale is connected.`
+    ? `Could not reach any server URL from the pairing QR. Tried: ${attemptedUrls}. Make sure this phone can reach one of those URLs. Use Wi-Fi/LAN, Tailscale, or a public tunnel URL.`
     : "Could not reach the server URL from the pairing QR.";
 }
 

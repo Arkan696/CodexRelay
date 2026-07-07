@@ -13,7 +13,7 @@ export function getConnectUrlGuidance(url: string) {
   }
 
   if (isLocalhost(host) || isUnspecifiedHost(host)) {
-    return "This address is only reachable from this computer. Use a same-Wi-Fi address or Tailscale for mobile pairing.";
+    return "This address is only reachable from this computer. Use a reachable URL such as LAN, Tailscale, or a public tunnel for mobile pairing.";
   }
 
   if (isTailscaleHost(host)) {
@@ -21,10 +21,10 @@ export function getConnectUrlGuidance(url: string) {
   }
 
   if (isPrivateIPv4Host(host) || isLocalIPv6Host(host)) {
-    return "Using a local Wi-Fi/LAN address. Keep the phone and computer on the same network; if pairing is flaky, try Tailscale.";
+    return "Using a local Wi-Fi/LAN address. For different networks, use Tailscale or start the relay with --public-url.";
   }
 
-  return "Using a configured or public address. Make sure the phone can reach it before pairing.";
+  return "Using a configured public or tunnel address. Same Wi-Fi is not required, but the phone must be able to reach this URL.";
 }
 
 export function createPairingQrPayload(details: { serverPublicKey: string; serverUrls: string[] }) {
@@ -40,11 +40,20 @@ export function createPairingQrPayload(details: { serverPublicKey: string; serve
   if (hosts.length > 0) {
     url.searchParams.set("h", hosts.join(","));
   }
+  const expandedUrls = nonCompactCandidateUrls(primaryServerUrl, details.serverUrls);
+  if (expandedUrls.length > 0) {
+    url.searchParams.set("serverUrls", JSON.stringify(expandedUrls));
+  }
   return url.toString();
 }
 
-export function getConnectUrlCandidates(details: { listenUrl: string; port: number }) {
+export function getConnectUrlCandidates(details: {
+  listenUrl: string;
+  port: number;
+  publicUrls?: string[];
+}) {
   return dedupeCandidates([
+    ...configuredConnectUrlCandidates(details.publicUrls),
     ...tailscaleConnectUrlCandidates(details.port),
     ...localNetworkConnectUrlCandidates(details.port),
     { label: "Server", url: details.listenUrl },
@@ -110,6 +119,13 @@ function localNetworkConnectUrlCandidates(port: number) {
   return candidates;
 }
 
+function configuredConnectUrlCandidates(urls: string[] | undefined) {
+  return (urls ?? []).map((url, index) => ({
+    label: index === 0 ? "Public URL" : "Additional URL",
+    url,
+  }));
+}
+
 function dedupeCandidates(candidates: ConnectUrlCandidate[]) {
   const deduped = new Map<string, ConnectUrlCandidate>();
   for (const candidate of candidates) {
@@ -140,6 +156,18 @@ function compactCandidateHosts(primaryServerUrl: string, serverUrls: string[]) {
     }
   }
   return hosts;
+}
+
+function nonCompactCandidateUrls(primaryServerUrl: string, serverUrls: string[]) {
+  const primary = parseUrl(primaryServerUrl);
+  if (!primary) {
+    return serverUrls.slice(1);
+  }
+
+  return serverUrls.slice(1).filter((serverUrl) => {
+    const candidate = parseUrl(serverUrl);
+    return !candidate || candidate.protocol !== primary.protocol || candidate.port !== primary.port;
+  });
 }
 
 function parseUrl(url: string) {

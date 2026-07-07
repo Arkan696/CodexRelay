@@ -35,6 +35,7 @@ const uiText: Record<string, string> = {
   "Checking current usage": "正在检查当前用量",
   "Choose images from your library": "从图库选择图片",
   "Choose the model for the next reply.": "选择下一次回复使用的模型。",
+  "Choose Wi-Fi, Tailscale, or tunnel": "选择 Wi-Fi、Tailscale 或隧道",
   "Choose Wi-Fi or Tailscale": "选择 Wi-Fi 或 Tailscale",
   Clear: "清除",
   "Clear goal": "清除目标",
@@ -55,6 +56,8 @@ const uiText: Record<string, string> = {
   "Context usage": "上下文用量",
   "Copy failed": "复制失败",
   "Copied to clipboard": "已复制到剪贴板",
+  "Could not connect. Use Wi-Fi/LAN, Tailscale, or a public tunnel URL, then scan again.":
+    "无法连接。请使用 Wi-Fi/LAN、Tailscale 或公网隧道 URL 后再扫描。",
   "Could not connect. Use the same Wi-Fi or turn on Tailscale, then scan again.":
     "无法连接。请使用同一 Wi-Fi，或打开 Tailscale 后再扫描。",
   "Could not read the selected image.": "无法读取所选图片。",
@@ -148,6 +151,8 @@ const uiText: Record<string, string> = {
   "Run in workspace, ask after sandbox failures": "在工作区内运行，沙盒失败后再询问",
   "Run npx codex-relay@latest on your computer, then scan the QR shown there.":
     "请先在电脑上运行 npx codex-relay@latest，然后扫描那里显示的二维码。",
+  "Same Wi-Fi is enough nearby. Away from that Wi-Fi, connect both devices with Tailscale or start codex-relay with a public tunnel URL, then scan the new QR.":
+    "近距离使用同一 Wi-Fi 即可。不在这个 Wi-Fi 时，请让两台设备连接 Tailscale，或用公网隧道 URL 启动 codex-relay，然后扫描新的二维码。",
   "Run one command on your computer, scan the QR code, then approve the phone in that same terminal.":
     "在电脑上运行一条命令，扫描二维码，然后在同一个终端中批准此手机。",
   "Run this on your computer:": "在电脑上运行：",
@@ -191,6 +196,8 @@ const uiText: Record<string, string> = {
   "Usage Limits": "用量限制",
   Use: "使用",
   Used: "已用",
+  "Make sure your phone can reach the Mobile URL printed by the relay. If the devices are on different networks, use Tailscale or start codex-relay with --public-url <https-url>.":
+    "请确认手机能访问中继打印的 Mobile URL。若两台设备不在同一网络，请使用 Tailscale，或用 --public-url <https-url> 启动 codex-relay。",
   "Use the same Wi-Fi on your phone and computer. If that is not possible, turn on Tailscale on both devices and scan again.":
     "请让手机和电脑使用同一 Wi-Fi。若无法做到，请在两台设备上打开 Tailscale 后重新扫描。",
   "Waiting for approval": "等待批准",

@@ -117,8 +117,8 @@ export function ConnectionBanner({
             <PairingStep
               icon="workspace"
               label="2"
-              title="Choose Wi-Fi or Tailscale"
-              body="Same Wi-Fi is enough nearby. To use Codex Relay away from this Wi-Fi, install Tailscale on your computer and phone, sign in to the same account, and make sure both say Connected before scanning."
+              title="Choose Wi-Fi, Tailscale, or tunnel"
+              body="Same Wi-Fi is enough nearby. Away from that Wi-Fi, connect both devices with Tailscale or start codex-relay with a public tunnel URL, then scan the new QR."
               actionLabel="Open Tailscale on App Store"
               actionAccessibilityLabel="Open Tailscale on the App Store"
               onAction={() => void Linking.openURL(tailscaleAppStoreUrl)}

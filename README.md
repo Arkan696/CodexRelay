@@ -96,6 +96,15 @@ Your phone must be able to open the `Mobile:` URL printed by Codex Relay.
 
 - Same Wi-Fi usually works.
 - Tailscale is a good default when the devices are on different networks.
+- A public HTTPS tunnel also works. Start the relay with a reachable URL and
+  scan the new QR:
+
+```sh
+npx codex-relay@latest --public-url https://your-tunnel.example.com
+```
+
+You can also set `CODEX_RELAY_PUBLIC_URL` or a comma-separated
+`CODEX_RELAY_PUBLIC_URLS` before starting the relay.
 
 ### Tailscale and Web Previews
 
@@ -181,6 +190,8 @@ Connection checklist:
 - Are the phone and computer on the same Wi-Fi or LAN?
 - If keeping the same network is difficult, are both devices connected through
   Tailscale or another reachable private network?
+- If using a public tunnel, did you start the relay with
+  `--public-url <https-url>` and scan the newly printed QR?
 - Can the phone open the exact `Mobile:` URL printed by the relay?
 - Does the computer firewall allow inbound traffic on the relay port, usually
   `8787`?
