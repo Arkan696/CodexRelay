@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: clawket
-        run: npm ci
+        run: npm install --no-package-lock
 
       - name: Build embedded Office assets
         working-directory: clawket
