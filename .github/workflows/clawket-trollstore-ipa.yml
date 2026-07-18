@@ -1,0 +1,120 @@
+name: Build Clawket TrollStore IPA
+
+on:
+  push:
+    branches:
+      - build/clawket-ios-2.1.0-20260718
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios-ipa:
+    name: Build unsigned Clawket IPA
+    runs-on: macos-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout pinned Clawket source
+        uses: actions/checkout@v4
+        with:
+          repository: p697/clawket
+          ref: 2f6f9ef956fdfc0f0ac1b324948be0fbb2ac7773
+          path: clawket
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+          cache-dependency-path: clawket/package-lock.json
+
+      - name: Install dependencies
+        working-directory: clawket
+        run: npm ci
+
+      - name: Build embedded Office assets
+        working-directory: clawket
+        run: npm run mobile:office:build
+
+      - name: Generate native iOS project
+        working-directory: clawket/apps/mobile
+        env:
+          CI: 1
+          EXPO_NO_TELEMETRY: 1
+        run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        working-directory: clawket/apps/mobile/ios
+        run: pod install --repo-update
+
+      - name: Detect Xcode workspace and scheme
+        id: xcode
+        working-directory: clawket/apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          if [ -z "$WORKSPACE" ]; then
+            echo "No Xcode workspace found" >&2
+            exit 1
+          fi
+          SCHEME="$(xcodebuild -list -json -workspace "$WORKSPACE" | ruby -e 'require "json"; data = JSON.parse(STDIN.read); puts data.fetch("workspace").fetch("schemes").first')"
+          if [ -z "$SCHEME" ]; then
+            echo "No Xcode scheme found" >&2
+            exit 1
+          fi
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned device app
+        working-directory: clawket/apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace "${{ steps.xcode.outputs.workspace }}" \
+            -scheme "${{ steps.xcode.outputs.scheme }}" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-derived-data \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build
+
+      - name: Package TrollStore IPA
+        working-directory: clawket/apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find build/ios-derived-data/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -print -quit)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No device .app bundle found" >&2
+            exit 1
+          fi
+
+          rm -rf Payload ipa
+          mkdir -p Payload ipa
+          cp -R "$APP_PATH" Payload/
+          find Payload -name embedded.mobileprovision -delete
+          /usr/bin/codesign --force --sign - --timestamp=none --deep "Payload/$(basename "$APP_PATH")" || true
+          /usr/bin/zip -qry ipa/Clawket-2.1.0-TrollStore.ipa Payload
+          shasum -a 256 ipa/Clawket-2.1.0-TrollStore.ipa > ipa/Clawket-2.1.0-TrollStore.ipa.sha256
+          unzip -t ipa/Clawket-2.1.0-TrollStore.ipa
+          ls -lh ipa/
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Clawket-2.1.0-TrollStore-IPA
+          path: |
+            clawket/apps/mobile/ipa/Clawket-2.1.0-TrollStore.ipa
+            clawket/apps/mobile/ipa/Clawket-2.1.0-TrollStore.ipa.sha256
+          if-no-files-found: error
+          retention-days: 7
