@@ -35,6 +35,7 @@ jobs:
         working-directory: clawket/apps/mobile
         run: |
           npm ci --ignore-scripts --workspaces=false
+          mkdir -p ../../node_modules
           node -e "console.log('expo=' + require('expo/package.json').version + ' reanimated=' + require('react-native-reanimated/package.json').version + ' worklets=' + require('react-native-worklets/package.json').version)"
 
       - name: Build embedded Office assets
