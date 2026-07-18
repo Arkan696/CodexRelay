@@ -33,7 +33,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: clawket
-        run: npm install --no-package-lock
+        run: |
+          npm install --no-package-lock --ignore-scripts
+          node scripts/setup-mobile-node-modules.mjs
 
       - name: Build embedded Office assets
         working-directory: clawket
